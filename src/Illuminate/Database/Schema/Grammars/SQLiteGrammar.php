@@ -147,7 +147,7 @@ class SQLiteGrammar extends Grammar
             implode(', ', $this->getColumns($blueprint)),
             $this->addForeignKeys($this->getCommandsByName($blueprint, 'foreign')),
             $this->addPrimaryKeys($this->getCommandByName($blueprint, 'primary')),
-            $connection->getConfig('strict') ? ' STRICT' : ''
+            $connection->getConfig('strict') === true ? ' STRICT' : ''
         );
     }
 

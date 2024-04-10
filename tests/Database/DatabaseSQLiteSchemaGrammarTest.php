@@ -21,17 +21,24 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
 
     public function testBasicCreateTable()
     {
+        $db = new Manager;
+
+        $db->addConnection([
+            'driver' => 'sqlite',
+            'strict' => true,
+        ]);
+
         $blueprint = new Blueprint('users');
         $blueprint->create();
         $blueprint->increments('id');
         $blueprint->string('email');
         
-        $conn = $this->getConnection();
-        $conn->shouldReceive('getConfig')->once()->with('strict')->andReturn(false);
+        $conn = $db->getConnection();
+        $conn->shouldReceive('getConfig')->once()->once()->with('strict')->andReturn(true);
         $statements = $blueprint->toSql($conn, $this->getGrammar());
 
         $this->assertCount(1, $statements);
-        $this->assertSame('create table "users" ("id" integer primary key autoincrement not null, "email" varchar not null)', $statements[0]);
+        $this->assertSame('create table "users" ("id" integer primary key autoincrement not null, "email" varchar not null) STRICT', $statements[0]);
 
         $blueprint = new Blueprint('users');
         $blueprint->increments('id');
