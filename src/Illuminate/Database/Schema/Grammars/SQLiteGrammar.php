@@ -136,16 +136,19 @@ class SQLiteGrammar extends Grammar
      *
      * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
      * @param  \Illuminate\Support\Fluent  $command
+     * @param  \Illuminate\Database\Connection  $connection
      * @return string
      */
-    public function compileCreate(Blueprint $blueprint, Fluent $command)
+    public function compileCreate(Blueprint $blueprint, Fluent $command, Connection $connection)
     {
-        return sprintf('%s table %s (%s%s%s)',
+        return sprintf('%s table %s (%s%s%s) %s',
             $blueprint->temporary ? 'create temporary' : 'create',
             $this->wrapTable($blueprint),
             implode(', ', $this->getColumns($blueprint)),
             $this->addForeignKeys($this->getCommandsByName($blueprint, 'foreign')),
-            $this->addPrimaryKeys($this->getCommandByName($blueprint, 'primary'))
+            $this->addPrimaryKeys($this->getCommandByName($blueprint, 'primary')),
+            $connection->getConfig('strict') ? 'STRICT' : ''
+
         );
     }
 
