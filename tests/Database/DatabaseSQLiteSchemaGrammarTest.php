@@ -25,7 +25,10 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
         $blueprint->create();
         $blueprint->increments('id');
         $blueprint->string('email');
-        $statements = $blueprint->toSql($this->getConnection(), $this->getGrammar());
+        
+        $conn = $this->getConnection();
+        $conn->shouldReceive('getConfig')->once()->with('strict')->andReturn(false);
+        $statements = $blueprint->toSql($conn, $this->getGrammar());
 
         $this->assertCount(1, $statements);
         $this->assertSame('create table "users" ("id" integer primary key autoincrement not null, "email" varchar not null)', $statements[0]);
@@ -33,7 +36,10 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
         $blueprint = new Blueprint('users');
         $blueprint->increments('id');
         $blueprint->string('email');
-        $statements = $blueprint->toSql($this->getConnection(), $this->getGrammar());
+
+        $conn = $this->getConnection();
+        $conn->shouldReceive('getConfig')->once()->with('strict')->andReturn(false);
+        $statements = $blueprint->toSql($conn, $this->getGrammar());
 
         $this->assertCount(2, $statements);
         $expected = [
@@ -43,6 +49,22 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
         $this->assertEquals($expected, $statements);
     }
 
+    public function testCreateStrictTable()
+    {
+        $blueprint = new Blueprint('users');
+        $blueprint->create();
+        $blueprint->temporary();
+        $blueprint->increments('id');
+        $blueprint->string('email');
+
+        $conn = $this->getConnection();
+        $conn->shouldReceive('getConfig')->once()->with('strict')->andReturn(true);
+        $statements = $blueprint->toSql($conn, $this->getGrammar());
+
+        $this->assertCount(1, $statements);
+        $this->assertSame('create temporary table "users" ("id" integer primary key autoincrement not null, "email" varchar not null) STRICT', $statements[0]);
+    }
+
     public function testCreateTemporaryTable()
     {
         $blueprint = new Blueprint('users');
@@ -50,7 +72,10 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
         $blueprint->temporary();
         $blueprint->increments('id');
         $blueprint->string('email');
-        $statements = $blueprint->toSql($this->getConnection(), $this->getGrammar());
+
+        $conn = $this->getConnection();
+        $conn->shouldReceive('getConfig')->once()->with('strict')->andReturn(false);
+        $statements = $blueprint->toSql($conn, $this->getGrammar());
 
         $this->assertCount(1, $statements);
         $this->assertSame('create temporary table "users" ("id" integer primary key autoincrement not null, "email" varchar not null)', $statements[0]);
@@ -60,7 +85,10 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
     {
         $blueprint = new Blueprint('users');
         $blueprint->drop();
-        $statements = $blueprint->toSql($this->getConnection(), $this->getGrammar());
+
+        $conn = $this->getConnection();
+        $conn->shouldReceive('getConfig')->once()->with('strict')->andReturn(false);
+        $statements = $blueprint->toSql($conn, $this->getGrammar());
 
         $this->assertCount(1, $statements);
         $this->assertSame('drop table "users"', $statements[0]);
@@ -899,7 +927,9 @@ class DatabaseSQLiteSchemaGrammarTest extends TestCase
         $blueprint->string('my_column');
         $blueprint->string('my_other_column')->storedAs('my_column');
 
-        $statements = $blueprint->toSql($this->getConnection(), $this->getGrammar());
+        $conn = $this->getConnection();
+        $conn->shouldReceive('getConfig')->andReturn(null);
+        $statements = $blueprint->toSql($conn, $this->getGrammar());
 
         $this->assertCount(1, $statements);
         $this->assertSame('create table "users" ("my_column" varchar not null, "my_other_column" varchar as (my_column) stored)', $statements[0]);
